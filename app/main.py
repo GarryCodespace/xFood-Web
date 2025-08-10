@@ -9,6 +9,8 @@ from contextlib import asynccontextmanager
 import time
 from app.core.config import settings
 from app.api import auth, users, recipes, bakes, circles, messages, reviews, comments, likes, upload, checkout, webhooks
+from app.db.database import engine
+from app.models import user, recipe, bake, circle, message, review, comment, like, purchase, subscription
 
 
 @asynccontextmanager
@@ -16,6 +18,15 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     print("🚀 Starting xFood Community Baking Platform Backend...")
+    
+    # Create database tables
+    try:
+        from app.db.database import Base
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created successfully")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not create database tables: {e}")
+    
     yield
     # Shutdown
     print("🛑 Shutting down xFood Backend...")
