@@ -26,6 +26,8 @@ import CircleDetail from "./CircleDetail";
 
 import Inbox from "./Inbox";
 
+import PaymentDemo from "./PaymentDemo";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -55,6 +57,8 @@ const PAGES = {
     CircleDetail: CircleDetail,
     
     Inbox: Inbox,
+    
+    PaymentDemo: PaymentDemo,
     
 }
 
@@ -108,6 +112,8 @@ function PagesContent() {
                 <Route path="/CircleDetail" element={<CircleDetail />} />
                 
                 <Route path="/Inbox" element={<Inbox />} />
+                
+                <Route path="/PaymentDemo" element={<PaymentDemo />} />
                 
             </Routes>
         </Layout>

@@ -4,9 +4,20 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Temporarily disable React refresh to fix white page
+      fastRefresh: false,
+      // Force JSX runtime
+      jsxRuntime: 'automatic',
+    })
+  ],
   server: {
-    allowedHosts: true
+    allowedHosts: true,
+    // Add some debugging
+    hmr: {
+      overlay: true
+    }
   },
   resolve: {
     alias: {
@@ -21,4 +32,6 @@ export default defineConfig({
       },
     },
   },
+  // Add some debugging
+  logLevel: 'info',
 }) 

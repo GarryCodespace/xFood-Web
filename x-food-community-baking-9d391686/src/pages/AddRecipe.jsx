@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import { Recipe, User } from "@/api/entities";
-import { UploadFile } from "@/api/integrations";
+import { Recipe, User } from "@/services/entities";
+import { UploadFile } from "@/services/integrations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, X, Plus, Minus, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginModal from "@/components/auth/LoginModal";
 
 const CATEGORIES = ["pastries", "cakes", "breads", "cookies", "cupcakes", "pies", "other"];
 const DIFFICULTY_LEVELS = ["easy", "medium", "hard"];
@@ -20,6 +22,8 @@ const COMMON_TAGS = ["vegan", "gluten-free", "dairy-free", "sugar-free", "keto",
 
 export default function AddRecipe() {
   const navigate = useNavigate();
+  const { isAuthenticated, user, loading } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [recipeData, setRecipeData] = useState({
@@ -39,9 +43,47 @@ export default function AddRecipe() {
   });
 
   useEffect(() => {
-    // Protect this route
-    User.me().catch(() => navigate(createPageUrl("Home")));
-  }, []);
+    // Show login modal if not authenticated after loading
+    if (!loading && !isAuthenticated) {
+      setShowLoginModal(true);
+    }
+  }, [isAuthenticated, loading]);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50 flex items-center justify-center">
+        <LoginModal isOpen={showLoginModal} onOpenChange={setShowLoginModal} />
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h1>
+          <p className="text-gray-600 mb-6">
+            You need to be logged in with Google to add a recipe.
+          </p>
+          <Button 
+            onClick={() => setShowLoginModal(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            Sign in with Google
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleImageUpload = async (file) => {
     if (!file) return;

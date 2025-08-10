@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Circle } from "@/api/entities";
+import { Circle } from "@/services/entities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

@@ -1,0 +1,18 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Central spoon-like figure with radiating limbs -->
+  <g>
+    <!-- Central spoon/head -->
+    <ellipse cx="20" cy="12" rx="6" ry="4" fill="#f97316"/>
+    <!-- Body/handle -->
+    <rect x="18" y="16" width="4" height="8" rx="2" fill="#f97316"/>
+    <!-- Radiating limbs/spokes -->
+    <!-- Upper left arm -->
+    <rect x="8" y="14" width="8" height="3" rx="1.5" fill="#f97316"/>
+    <!-- Upper right arm -->
+    <rect x="24" y="14" width="8" height="3" rx="1.5" fill="#f97316"/>
+    <!-- Lower left leg -->
+    <rect x="8" y="26" width="8" height="3" rx="1.5" fill="#f97316"/>
+    <!-- Lower right leg -->
+    <rect x="24" y="26" width="8" height="3" rx="1.5" fill="#f97316"/>
+  </g>
+</svg>

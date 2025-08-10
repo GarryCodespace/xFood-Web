@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SendEmail } from "@/api/integrations";
+import { SendEmail } from "@/services/integrations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

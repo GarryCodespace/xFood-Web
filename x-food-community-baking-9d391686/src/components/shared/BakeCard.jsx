@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, MapPin, Heart, ShoppingBag, Phone, Eye, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Like, User } from "@/api/entities";
+import { Like, User } from "@/services/entities";
 
 export default function BakeCard({ bake, showActions = true }) {
   const [isLiked, setIsLiked] = useState(false);

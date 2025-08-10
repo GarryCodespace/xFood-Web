@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Users, ChefHat, BookOpen, User, Plus, Bell, MessageSquare } from "lucide-react";
-import { User as UserEntity } from '@/api/entities';
+import { Home, Users, ChefHat, BookOpen, User, Plus, Bell, MessageSquare, CreditCard } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button";
-import NotificationBell from './components/shared/NotificationBell';
-import LoginModal from './components/auth/LoginModal';
+import NotificationBell from '../components/shared/NotificationBell';
+import LoginModal from '../components/auth/LoginModal';
 
 const navigationItems = [
   {
@@ -24,38 +24,30 @@ const navigationItems = [
     url: createPageUrl("Circles"),
     icon: Users,
   },
+  {
+    title: "Payments",
+    url: createPageUrl("PaymentDemo"),
+    icon: CreditCard,
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/59b84e278_381e16b4-cdcc-46aa-b162-c58530812012.png";
-
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const currentUser = await UserEntity.me();
-        setUser(currentUser);
-      } catch (e) {
-        setUser(null);
-      }
-    };
-    checkUser();
-  }, []);
+  const logoUrl = "/logo.svg"; // Using our local SVG logo
 
   const handleShareBakeClick = async () => {
-    try {
-      await UserEntity.me();
+    if (isAuthenticated) {
       navigate(createPageUrl("AddBake"));
-    } catch (error) {
+    } else {
       setShowLoginModal(true);
     }
   };
 
   let allNavigationItems = [...navigationItems];
-  if (user) {
+  if (isAuthenticated) {
     allNavigationItems.push({
       title: "Profile",
       url: createPageUrl("Profile"),

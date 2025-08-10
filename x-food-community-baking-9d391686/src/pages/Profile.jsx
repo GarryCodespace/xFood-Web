@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User, Bake, Recipe, Message } from "@/api/entities"; // Added Message entity
+import { User, Bake, Recipe, Message } from "@/services/entities"; // Added Message entity
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

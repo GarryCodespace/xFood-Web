@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Message, User, Bake } from "@/api/entities";
+import { Message, User, Bake } from "@/services/entities";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, ArrowLeft, Image } from "lucide-react";

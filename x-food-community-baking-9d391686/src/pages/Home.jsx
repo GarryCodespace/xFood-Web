@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Bake, Circle, User, Recipe } from "@/api/entities";
+import { Bake, Circle, User, Recipe } from "@/services/entities";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import { Circle, User } from "@/api/entities";
-import { UploadFile } from "@/api/integrations";
+import { Circle, User } from "@/services/entities";
+import { UploadFile } from "@/services/integrations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,11 +12,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, X, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginModal from "@/components/auth/LoginModal";
 
 const COMMON_TAGS = ["beginners-welcome", "advanced", "sourdough", "vegan", "gluten-free", "decorating", "bread", "cakes", "cookies", "seasonal", "professional", "hobby"];
 
 export default function CreateCircle() {
   const navigate = useNavigate();
+  const { isAuthenticated, user, loading } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [circleData, setCircleData] = useState({
@@ -29,9 +33,47 @@ export default function CreateCircle() {
   });
 
   useEffect(() => {
-    // Protect this route
-    User.me().catch(() => navigate(createPageUrl("Home")));
-  }, [navigate]); // Added navigate to dependency array for useEffect best practices
+    // Show login modal if not authenticated after loading
+    if (!loading && !isAuthenticated) {
+      setShowLoginModal(true);
+    }
+  }, [isAuthenticated, loading]);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50 flex items-center justify-center">
+        <LoginModal isOpen={showLoginModal} onOpenChange={setShowLoginModal} />
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h1>
+          <p className="text-gray-600 mb-6">
+            You need to be logged in with Google to create a baking circle.
+          </p>
+          <Button 
+            onClick={() => setShowLoginModal(true)}
+            className="bg-purple-500 hover:bg-purple-600 text-white"
+          >
+            Sign in with Google
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleImageUpload = async (file) => {
     if (!file) return;

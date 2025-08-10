@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Bake, User, Comment, Like, Message, Notification } from "@/api/entities"; // Added Message, Notification
+import { Bake, User, Comment, Like, Message, Notification } from "@/services/entities"; // Added Message, Notification
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
