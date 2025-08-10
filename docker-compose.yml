@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///xfood_dev.db
+      - DEBUG=true
+    volumes:
+      - ./xfood_dev.db:/app/xfood_dev.db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./x-food-community-baking-9d391686
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
