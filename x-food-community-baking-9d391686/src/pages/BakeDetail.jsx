@@ -45,7 +45,7 @@ export default function BakeDetail() {
 
     try {
       const bakeData = await Bake.list();
-      const foundBake = bakeData.find(b => b.id === bakeId);
+      const foundBake = bakeData.find(b => b.id === parseInt(bakeId));
 
       if (!foundBake) {
         navigate(createPageUrl("Home"));
@@ -60,10 +60,10 @@ export default function BakeDetail() {
       setBaker(bakerData);
 
       // Load likes and rating
-      const likes = await Like.filter({ bake_id: bakeId });
+      const likes = await Like.filter({ bake_id: parseInt(bakeId) });
       setLikeCount(likes.length);
 
-      const comments = await Comment.filter({ bake_id: bakeId });
+      const comments = await Comment.filter({ bake_id: parseInt(bakeId) });
       const ratings = comments.filter(c => c.rating).map(c => c.rating);
       if (ratings.length > 0) {
         const avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;

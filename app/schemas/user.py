@@ -74,6 +74,11 @@ class GoogleAuthRequest(BaseModel):
     id_token: str = Field(..., description="Google ID token from frontend")
 
 
+class AppleAuthRequest(BaseModel):
+    """Schema for Apple Sign-In authentication request"""
+    id_token: str = Field(..., description="Apple ID token from frontend")
+
+
 class UserProfile(BaseModel):
     """Schema for user profile display"""
     id: int

@@ -134,7 +134,14 @@ export const Comment = {
   },
 
   create: async (commentData) => {
-    return apiService.post('/comments', commentData);
+    // Determine if this is a bake or recipe comment and use the correct endpoint
+    if (commentData.bake_id) {
+      return apiService.post(`/comments/bake/${commentData.bake_id}`, commentData);
+    } else if (commentData.recipe_id) {
+      return apiService.post(`/comments/recipe/${commentData.recipe_id}`, commentData);
+    } else {
+      throw new Error('Comment must have either bake_id or recipe_id');
+    }
   },
 
   update: async (id, commentData) => {

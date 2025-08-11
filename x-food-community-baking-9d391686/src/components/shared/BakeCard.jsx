@@ -196,7 +196,7 @@ export default function BakeCard({ bake, showActions = true }) {
                   </Link>
                 )}
                 
-                <Link to={createPageUrl(`BakeDetail?id=${bake.id}`)} className="flex-1">
+                <Link to={`/BakeDetail?id=${bake.id}`} className="flex-1">
                   <Button 
                     className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg rounded-xl font-medium"
                     size="sm"

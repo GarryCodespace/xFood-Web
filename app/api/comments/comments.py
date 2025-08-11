@@ -35,6 +35,7 @@ async def create_bake_comment(
     # Create comment with default user ID
     db_comment = Comment(
         content=comment_data.content,
+        rating=comment_data.rating if hasattr(comment_data, 'rating') else 5.0,
         user_id=1,  # Default user ID for anonymous comments
         bake_id=bake_id
     )
@@ -69,6 +70,7 @@ async def create_recipe_comment(
     # Create comment with default user ID
     db_comment = Comment(
         content=comment_data.content,
+        rating=comment_data.rating if hasattr(comment_data, 'rating') else 5.0,
         user_id=1,  # Default user ID for anonymous comments
         recipe_id=recipe_id
     )

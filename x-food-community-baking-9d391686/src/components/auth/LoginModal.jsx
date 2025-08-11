@@ -49,21 +49,27 @@ export default function LoginModal({ isOpen, onOpenChange }) {
   }, []);
 
   const handleCredentialResponse = async (response) => {
+    console.log('Google OAuth callback received:', response);
     setIsLoading(true);
     setError('');
 
     try {
+      console.log('Attempting to login with credential:', response.credential);
       const result = await login(response.credential);
+      console.log('Login result:', result);
+      
       if (result.success) {
+        console.log('Login successful, closing modal and redirecting');
         onOpenChange(false);
         // Navigate to profile after successful login
         window.location.href = '/Profile';
       } else {
+        console.error('Login failed:', result.error);
         setError(result.error || 'Google login failed');
       }
     } catch (error) {
       console.error('Google login error:', error);
-      setError('Google login failed. Please try again.');
+      setError(`Google login failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

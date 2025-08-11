@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (token, provider = 'google') => {
     try {
+      console.log('AuthContext: Starting login process for provider:', provider);
       setLoading(true);
       
       let endpoint = `${AUTH_CONFIG.API.BASE_URL}/api/v1/auth/google`;
@@ -68,6 +69,9 @@ export const AuthProvider = ({ children }) => {
         body = JSON.stringify({ id_token: token });
       }
       
+      console.log('AuthContext: Making request to:', endpoint);
+      console.log('AuthContext: Request body:', body);
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -76,8 +80,12 @@ export const AuthProvider = ({ children }) => {
         body: body,
       });
 
+      console.log('AuthContext: Response status:', response.status);
+      console.log('AuthContext: Response headers:', response.headers);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('AuthContext: Login successful, data:', data);
         
         // Store tokens
         localStorage.setItem('authToken', data.access_token);
@@ -89,11 +97,12 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       } else {
         const errorData = await response.json();
+        console.error('AuthContext: Login failed with status:', response.status, 'Error:', errorData);
         return { success: false, error: errorData.detail || 'Login failed' };
       }
     } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: 'Network error occurred' };
+      console.error('AuthContext: Login error:', error);
+      return { success: false, error: `Network error: ${error.message}` };
     } finally {
       setLoading(false);
     }

@@ -12,6 +12,7 @@ import CircleCard from "../components/shared/CircleCard";
 import RecipeCard from "../components/shared/RecipeCard";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { AUTH_CONFIG } from '@/config/auth';
 
 export default function Home() {
   const [bakes, setBakes] = useState([]);
@@ -89,7 +90,16 @@ export default function Home() {
   const filteredContent = getFilteredContent();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50">
+      {/* Temporary Debug Info - Remove after fixing OAuth */}
+      <div className="fixed top-20 right-4 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded z-50 text-xs">
+        <strong>Debug Info:</strong><br/>
+        Google Client ID: {AUTH_CONFIG.GOOGLE.CLIENT_ID}<br/>
+        Environment: {import.meta.env.MODE}<br/>
+        Base URL: {AUTH_CONFIG.API.BASE_URL}<br/>
+        Raw Env: {import.meta.env.VITE_GOOGLE_CLIENT_ID}
+      </div>
+      
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600 text-white overflow-hidden">
         <div className="absolute inset-0 bg-black/20" />
