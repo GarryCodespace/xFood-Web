@@ -212,7 +212,10 @@ export default function LoginModal({ isOpen, onOpenChange }) {
           <div id="google-signin-button" className="w-full"></div>
           
           {/* Apple Sign-In Button - Only show if properly configured */}
-          {AUTH_CONFIG.APPLE.CLIENT_ID !== 'YOUR_APPLE_CLIENT_ID' && AUTH_CONFIG.APPLE.CLIENT_ID !== 'com.yourapp.identifier' && (
+          {AUTH_CONFIG.APPLE.CLIENT_ID && 
+           AUTH_CONFIG.APPLE.CLIENT_ID !== 'YOUR_APPLE_CLIENT_ID' && 
+           AUTH_CONFIG.APPLE.CLIENT_ID !== 'com.yourapp.identifier' && 
+           !AUTH_CONFIG.APPLE.CLIENT_ID.includes('yourapp') && (
             <Button
               onClick={handleAppleLogin}
               disabled={isLoading}
