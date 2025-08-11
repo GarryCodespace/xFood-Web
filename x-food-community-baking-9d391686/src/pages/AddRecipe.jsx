@@ -11,12 +11,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createPageUrl } from '@/utils';
 import { ChefHat, ArrowLeft, Upload, X } from 'lucide-react';
 import { Recipe } from '@/services/entities';
-// LoginModal import removed - no authentication required
+import LoginModal from '@/components/auth/LoginModal';
 
 export default function AddRecipe() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  // showLoginModal state removed - no authentication required
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -35,10 +35,12 @@ export default function AddRecipe() {
   const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Remove authentication check - always allow access
+  // Check authentication and show login modal if needed
   useEffect(() => {
-    // No authentication required - page is always accessible
-  }, []);
+    if (!user) {
+      setShowLoginModal(true);
+    }
+  }, [user]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -57,6 +59,13 @@ export default function AddRecipe() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if user is authenticated before submitting
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -312,7 +321,11 @@ export default function AddRecipe() {
         </Card>
       </div>
       
-      {/* LoginModal removed - no authentication required */}
+      {/* Login Modal for Authentication */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onOpenChange={setShowLoginModal}
+      />
     </div>
   );
 }
