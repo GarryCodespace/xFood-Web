@@ -5,6 +5,7 @@ const API_BASE_URL = AUTH_CONFIG.API.BASE_URL;
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
+    this.apiPrefix = '/api/v1';
   }
 
   getAuthHeaders() {
@@ -16,7 +17,9 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
+    // Add API prefix if endpoint doesn't already include it
+    const fullEndpoint = endpoint.startsWith('/api/') ? endpoint : `${this.apiPrefix}${endpoint}`;
+    const url = `${this.baseURL}${fullEndpoint}`;
     const config = {
       headers: this.getAuthHeaders(),
       ...options,

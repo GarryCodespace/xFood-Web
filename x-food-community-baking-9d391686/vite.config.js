@@ -34,4 +34,19 @@ export default defineConfig({
   },
   // Add some debugging
   logLevel: 'info',
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-avatar'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          utils: ['clsx', 'class-variance-authority', 'tailwind-merge']
+        }
+      }
+    }
+  }
 }) 

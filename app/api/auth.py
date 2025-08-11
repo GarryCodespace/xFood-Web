@@ -2,9 +2,10 @@
 Authentication API endpoints
 """
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
+import httpx
 from app.core.security import (
     verify_password, get_password_hash, create_access_token, 
     create_refresh_token, verify_token, is_refresh_token
@@ -12,7 +13,7 @@ from app.core.security import (
 from app.core.config import settings
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, Token, TokenData
+from app.schemas.user import UserCreate, UserLogin, Token, TokenData, GoogleAuthRequest
 from app.core.deps import get_current_user
 
 router = APIRouter()
@@ -156,3 +157,112 @@ async def get_current_user_info(
         "dietary_preferences": current_user.dietary_preferences,
         "join_date": current_user.join_date
     }
+
+
+@router.post("/demo", response_model=Token)
+async def demo_login(db: Session = Depends(get_db)):
+    """Demo login for testing purposes"""
+    # Check if demo user exists
+    demo_email = "demo@xfood.com"
+    user = db.query(User).filter(User.email == demo_email).first()
+    
+    if not user:
+        # Create demo user
+        user = User(
+            email=demo_email,
+            full_name="Demo User",
+            hashed_password="",  # No password for demo user
+            avatar_url="https://api.dicebear.com/7.x/avataaars/svg?seed=demo",
+            location="Demo Location",
+            bio="This is a demo account for testing xFood Community Baking Platform",
+            dietary_preferences=["vegetarian"],
+            is_active=True,
+            is_verified=True,
+            role="user"
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    # Generate tokens
+    access_token = create_access_token(subject=user.email)
+    refresh_token = create_refresh_token(subject=user.email)
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+
+@router.post("/google", response_model=Token)
+async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """Authenticate user with Google OAuth"""
+    try:
+        # Verify the Google ID token
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={request.id_token}"
+            )
+            
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Google token"
+            )
+        
+        token_info = response.json()
+        google_email = token_info.get("email")
+        
+        if not google_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email not found in Google token"
+            )
+        
+        # Check if user exists
+        user = db.query(User).filter(User.email == google_email).first()
+        
+        if not user:
+            # Create new user from Google data
+            user = User(
+                email=google_email,
+                full_name=token_info.get("name", "Google User"),
+                hashed_password="",  # No password for Google OAuth users
+                avatar_url=token_info.get("picture"),
+                location="",
+                bio="",
+                dietary_preferences=[],
+                is_active=True,
+                is_verified=True,
+                role="user"
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        elif not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User account is inactive"
+            )
+        
+        # Generate tokens
+        access_token = create_access_token(subject=user.email)
+        refresh_token = create_refresh_token(subject=user.email)
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+        
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to verify Google token"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authentication failed: {str(e)}"
+        )

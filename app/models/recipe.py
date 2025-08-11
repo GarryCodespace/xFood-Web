@@ -1,7 +1,7 @@
 """
 Recipe model for the xFood platform
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, ARRAY, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, JSON, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -15,14 +15,14 @@ class Recipe(Base):
     title = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=False)
     image_url = Column(String(500), nullable=True)
-    ingredients = Column(ARRAY(Text), nullable=False)
-    instructions = Column(ARRAY(Text), nullable=False)
+    ingredients = Column(JSON, nullable=False)  # Changed from ARRAY to JSON for SQLite compatibility
+    instructions = Column(JSON, nullable=False)  # Changed from ARRAY to JSON for SQLite compatibility
     prep_time = Column(Integer, nullable=True)  # in minutes
     cook_time = Column(Integer, nullable=True)  # in minutes
     servings = Column(Integer, nullable=True)
     difficulty = Column(String(50), default="medium")  # easy, medium, hard
     category = Column(String(100), nullable=False)
-    tags = Column(ARRAY(String), default=[])
+    tags = Column(JSON, default=[])  # Changed from ARRAY to JSON for SQLite compatibility
     is_premium = Column(Boolean, default=False)
     price_cents = Column(Integer, nullable=True)  # Price in cents for premium recipes
     rating = Column(Float, default=0.0)
@@ -33,7 +33,7 @@ class Recipe(Base):
     
     # Relationships
     creator = relationship("User", back_populates="recipes")
-    reviews = relationship("Review", back_populates="recipe")
+    # Removed problematic reviews relationship - reviews are accessed via item_type/item_id
     comments = relationship("Comment", back_populates="recipe")
     likes = relationship("Like", back_populates="recipe")
     

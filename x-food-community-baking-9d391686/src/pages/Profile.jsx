@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { User, Bake, Recipe, Message } from "@/services/entities"; // Added Message entity
+import { User, Bake, Recipe, Message } from "@/services/entities";
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -15,48 +16,76 @@ import { createPageUrl } from "@/utils";
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { user: authUser, logout, isAuthenticated } = useAuth();
   const [user, setUser] = useState(null);
   const [userBakes, setUserBakes] = useState([]);
   const [userRecipes, setUserRecipes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0); // State for unread message count
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      navigate(createPageUrl("Home"));
+      return;
+    }
     loadUserData();
-  }, []);
+  }, [isAuthenticated, navigate]);
 
   const loadUserData = async () => {
     setIsLoading(true);
     try {
-      const currentUser = await User.me();
+      // Get user details from auth context or API
+      let currentUser = authUser;
+      if (!currentUser) {
+        currentUser = await User.me();
+      }
       setUser(currentUser);
       
-      // Fetch user's bakes, recipes, and unread messages concurrently
-      const [bakes, recipes, unreadMessages] = await Promise.all([
-        Bake.filter({ created_by: currentUser.email }, "-created_date", 20),
-        Recipe.filter({ created_by: currentUser.email }, "-created_date", 20),
-        // Assuming a Message entity exists with a filter method for unread messages
-        Message.filter({ receiver_email: currentUser.email, is_read: false }) 
+      // Fetch user's bakes and recipes
+      console.log('Fetching content for user:', currentUser.id);
+      const [bakes, recipes] = await Promise.all([
+        Bake.list({ creator_id: currentUser.id, limit: 50 }).catch((error) => {
+          console.error('Error fetching bakes:', error);
+          return [];
+        }),
+        Recipe.list({ creator_id: currentUser.id, limit: 50 }).catch((error) => {
+          console.error('Error fetching recipes:', error);
+          return [];
+        })
       ]);
       
-      setUserBakes(bakes);
-      setUserRecipes(recipes);
-      setUnreadMessagesCount(unreadMessages.length); // Set the count of unread messages
+      console.log('Fetched bakes:', bakes);
+      console.log('Fetched recipes:', recipes);
+      
+      setUserBakes(bakes || []);
+      setUserRecipes(recipes || []);
+      
+      // Try to get unread messages count
+      try {
+        const unreadMessages = await Message.list({ receiver_id: currentUser.id, is_read: false });
+        setUnreadMessagesCount(unreadMessages?.length || 0);
+      } catch (error) {
+        console.log("Messages not available:", error);
+        setUnreadMessagesCount(0);
+      }
 
     } catch (error) {
       console.error("Error loading user data:", error);
+      // If user data fails to load, redirect to home
       navigate(createPageUrl("Home"));
     }
     setIsLoading(false);
   };
 
-  const handleLogout = async () => {
-    await User.logout();
-    window.location.reload();
+  const handleLogout = () => {
+    logout();
+    navigate(createPageUrl("Home"));
   };
 
-  const handleSwitchAccount = async () => {
-    await User.login();
+  const handleSwitchAccount = () => {
+    logout();
+    // This will trigger the login modal
+    window.location.reload();
   };
 
   if (isLoading || !user) {
@@ -104,7 +133,7 @@ export default function Profile() {
                     )}
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      <span>Joined {new Date(user.created_date).toLocaleDateString()}</span>
+                      <span>Joined {new Date(user.created_at || user.join_date || Date.now()).toLocaleDateString()}</span>
                     </div>
                   </div>
                   
@@ -114,7 +143,7 @@ export default function Profile() {
                         <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                         <span className="text-lg font-semibold">{user.rating.toFixed(1)}</span>
                       </div>
-                      <span className="text-gray-500">({user.total_reviews} reviews)</span>
+                      <span className="text-gray-500">({user.review_count || 0} reviews)</span>
                     </div>
                   )}
                 </div>

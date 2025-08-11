@@ -18,8 +18,8 @@ class RecipeBase(BaseModel):
     difficulty: str = Field("medium", pattern="^(easy|medium|hard)$")
     category: str = Field(..., min_length=1, max_length=100)
     tags: Optional[List[str]] = []
-    is_for_sale: bool = False
-    price: Optional[float] = Field(None, ge=0)
+    is_premium: bool = False
+    price_cents: Optional[int] = Field(None, ge=0)
 
 
 class RecipeCreate(RecipeBase):
@@ -40,8 +40,8 @@ class RecipeUpdate(BaseModel):
     difficulty: Optional[str] = Field(None, pattern="^(easy|medium|hard)$")
     category: Optional[str] = Field(None, min_length=1, max_length=100)
     tags: Optional[List[str]] = None
-    is_for_sale: Optional[bool] = None
-    price: Optional[float] = Field(None, ge=0)
+    is_premium: Optional[bool] = None
+    price_cents: Optional[int] = Field(None, ge=0)
 
 
 class RecipeInDB(RecipeBase):

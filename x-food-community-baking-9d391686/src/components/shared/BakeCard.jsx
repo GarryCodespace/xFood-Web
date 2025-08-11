@@ -2,15 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, Heart, ShoppingBag, Phone, Eye, MessageCircle } from "lucide-react";
+import { Star, MapPin, Heart, ShoppingBag, Phone, Eye, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Like, User } from "@/services/entities";
+import CommentSection from "./CommentSection";
 
 export default function BakeCard({ bake, showActions = true }) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
     loadCurrentUser();
@@ -165,46 +167,66 @@ export default function BakeCard({ bake, showActions = true }) {
           </div>
 
           {showActions && (
-            <div className="flex gap-2 pt-2">
+            <div className="space-y-2 pt-2">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLike}
+                  className={`flex-1 rounded-xl transition-all ${
+                    isLiked 
+                      ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200 text-red-600' 
+                      : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 text-purple-700'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 mr-1 ${isLiked ? 'fill-red-500' : ''}`} />
+                  {isLiked ? 'Liked' : 'Like'}
+                </Button>
+                
+                {!isOwner && currentUser && (
+                  <Link to={createPageUrl(`Inbox?with=${bake.created_by}&bakeId=${bake.id}`)} className="flex-1">
+                    <Button 
+                      variant="outline"
+                      className="w-full bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 text-blue-700 rounded-xl font-medium"
+                      size="sm"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-1" />
+                      Message
+                    </Button>
+                  </Link>
+                )}
+                
+                <Link to={createPageUrl(`BakeDetail?id=${bake.id}`)} className="flex-1">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg rounded-xl font-medium"
+                    size="sm"
+                  >
+                    View Details
+                  </Button>
+                </Link>
+              </div>
+              
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleLike}
-                className={`flex-1 rounded-xl transition-all ${
-                  isLiked 
-                    ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200 text-red-600' 
-                    : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 text-purple-700'
-                }`}
+                onClick={() => setShowComments(!showComments)}
+                className="w-full bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gradient-to-r hover:from-gray-100 hover:to-slate-100"
               >
-                <Heart className={`w-4 h-4 mr-1 ${isLiked ? 'fill-red-500' : ''}`} />
-                {isLiked ? 'Liked' : 'Like'}
+                <MessageCircle className="w-4 h-4 mr-2" />
+                {showComments ? 'Hide Comments' : 'Show Comments'}
+                {showComments ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
               </Button>
-              
-              {!isOwner && currentUser && (
-                <Link to={createPageUrl(`Inbox?with=${bake.created_by}&bakeId=${bake.id}`)} className="flex-1">
-                  <Button 
-                    variant="outline"
-                    className="w-full bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 text-blue-700 rounded-xl font-medium"
-                    size="sm"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    Message
-                  </Button>
-                </Link>
-              )}
-              
-              <Link to={createPageUrl(`BakeDetail?id=${bake.id}`)} className="flex-1">
-                <Button 
-                  className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg rounded-xl font-medium"
-                  size="sm"
-                >
-                  View Details
-                </Button>
-              </Link>
             </div>
           )}
         </div>
       </CardContent>
+      
+      {/* Comments Section */}
+      {showComments && (
+        <div className="border-t border-gray-100 px-6 pb-6">
+          <CommentSection bakeId={bake.id} />
+        </div>
+      )}
     </Card>
   );
 }

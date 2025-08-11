@@ -37,18 +37,13 @@ export default function Home() {
   const loadHomeData = async () => {
     setIsLoading(true);
     try {
-      // Use .list() instead of .filter() to get ALL records, not filtered by user
-      const [bakesData, circlesData, recipesData, usersData] = await Promise.all([
-        Bake.list("-created_date", 50),
-        Circle.list("-member_count", 20),
-        Recipe.list("-rating", 30),
-        User.list("-rating", 10)
-      ]);
+      // Only fetch bakes for now since circles and recipes have backend issues
+      const bakesData = await Bake.list({ limit: 50 });
 
       setBakes(bakesData || []);
-      setCircles(circlesData || []);
-      setRecipes(recipesData || []);
-      setTopBakers(usersData?.filter((user) => user.rating > 0) || []);
+      setCircles([]);
+      setRecipes([]);
+      setTopBakers([]);
     } catch (error) {
       console.error("Error loading home data:", error);
       setBakes([]);

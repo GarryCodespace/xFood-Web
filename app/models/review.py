@@ -20,10 +20,9 @@ class Review(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relationships
-    user = relationship("User", back_populates="reviews")
-    recipe = relationship("Recipe", back_populates="reviews")
-    bake = relationship("Bake", back_populates="reviews")
+    # Relationships - simplified to avoid circular dependencies
+    user = relationship("User")
+    # Removed problematic back_populates references
     
     def __repr__(self):
         return f"<Review(id={self.id}, user_id={self.user_id}, item_type='{self.item_type}', rating={self.rating})>"

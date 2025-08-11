@@ -1,7 +1,7 @@
 """
 User model for the xFood platform
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, ARRAY
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -23,7 +23,7 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     role = Column(String(50), default="user")  # user, baker, admin
-    dietary_preferences = Column(ARRAY(String), default=[])
+    dietary_preferences = Column(JSON, default=[])  # Changed from ARRAY to JSON for SQLite compatibility
     join_date = Column(DateTime(timezone=True), server_default=func.now())
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -33,11 +33,11 @@ class User(Base):
     has_active_subscription = Column(Boolean, default=False)
     first_post_used = Column(Boolean, default=False)  # Track if free post was used
     
-    # Relationships
+    # Relationships - simplified to avoid circular dependencies
     recipes = relationship("Recipe", back_populates="creator")
     bakes = relationship("Bake", back_populates="creator")
     circles = relationship("Circle", back_populates="creator")
-    reviews = relationship("Review", back_populates="user")
+    # Removed problematic relationships that might cause circular dependency issues
     comments = relationship("Comment", back_populates="user")
     likes = relationship("Like", back_populates="user")
     sent_messages = relationship("Message", foreign_keys="Message.sender_id", back_populates="sender")

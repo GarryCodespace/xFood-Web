@@ -1,7 +1,7 @@
 """
 Circle model for baking communities
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ARRAY, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -16,7 +16,7 @@ class Circle(Base):
     description = Column(Text, nullable=False)
     image_url = Column(String(500), nullable=True)
     location = Column(String(255), nullable=True)
-    tags = Column(ARRAY(String), default=[])
+    tags = Column(JSON, default=[])  # Changed from ARRAY to JSON for SQLite compatibility
     is_public = Column(Boolean, default=True)
     member_count = Column(Integer, default=1)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)

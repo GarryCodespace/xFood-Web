@@ -22,6 +22,15 @@ export const Recipe = {
     return apiService.get(`/recipes?${queryString}`);
   },
 
+  filter: async (filters = {}, orderBy = null) => {
+    const params = { ...filters };
+    if (orderBy) {
+      params.order_by = orderBy;
+    }
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/recipes?${queryString}`);
+  },
+
   get: async (id) => {
     return apiService.get(`/recipes/${id}`);
   },
@@ -42,6 +51,15 @@ export const Recipe = {
 // Bake entity
 export const Bake = {
   list: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/bakes?${queryString}`);
+  },
+
+  filter: async (filters = {}, orderBy = null) => {
+    const params = { ...filters };
+    if (orderBy) {
+      params.order_by = orderBy;
+    }
     const queryString = new URLSearchParams(params).toString();
     return apiService.get(`/bakes?${queryString}`);
   },
@@ -102,6 +120,15 @@ export const Comment = {
     return apiService.get(`/comments?${queryString}`);
   },
 
+  filter: async (filters = {}, orderBy = null) => {
+    const params = { ...filters };
+    if (orderBy) {
+      params.order_by = orderBy;
+    }
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/comments?${queryString}`);
+  },
+
   get: async (id) => {
     return apiService.get(`/comments/${id}`);
   },
@@ -122,6 +149,15 @@ export const Comment = {
 // Like entity
 export const Like = {
   list: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/likes?${queryString}`);
+  },
+
+  filter: async (filters = {}, orderBy = null) => {
+    const params = { ...filters };
+    if (orderBy) {
+      params.order_by = orderBy;
+    }
     const queryString = new URLSearchParams(params).toString();
     return apiService.get(`/likes?${queryString}`);
   },
@@ -166,6 +202,15 @@ export const Review = {
 // Message entity
 export const Message = {
   list: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/messages?${queryString}`);
+  },
+
+  filter: async (filters = {}, orderBy = null) => {
+    const params = { ...filters };
+    if (orderBy) {
+      params.order_by = orderBy;
+    }
     const queryString = new URLSearchParams(params).toString();
     return apiService.get(`/messages?${queryString}`);
   },

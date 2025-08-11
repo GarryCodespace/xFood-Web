@@ -1,457 +1,384 @@
 
-import React, { useState, useEffect } from "react";
-import { Bake, Circle, User } from "@/services/entities";
-import { UploadFile } from "@/services/integrations";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, X, Camera, Image as ImageIcon, ChefHat } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import LoginModal from "@/components/auth/LoginModal";
-
-const CATEGORIES = ["pastries", "cakes", "breads", "cookies", "cupcakes", "pies", "other"];
-const COMMON_TAGS = ["vegan", "gluten-free", "dairy-free", "sugar-free", "keto", "organic", "nuts", "chocolate"];
-const ALLERGENS = ["nuts", "dairy", "eggs", "gluten", "soy", "shellfish", "sesame"];
+import { useAuth } from '@/contexts/AuthContext';
+import { createPageUrl } from '@/utils';
+import { ChefHat, ArrowLeft, Upload, X } from 'lucide-react';
+import { Bake } from '@/services/entities';
 
 export default function AddBake() {
   const navigate = useNavigate();
-  const { isAuthenticated, user, loading } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [circles, setCircles] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [bakeData, setBakeData] = useState({
-    title: "",
-    description: "",
-    image_url: "",
-    category: "",
-    tags: [],
-    allergens: [],
-    price: "",
-    available_for_order: false,
-    pickup_location: "",
-    full_address: "",
-    phone_number: "",
-    circle_id: ""
+  const { user } = useAuth();
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: 'desserts',
+    difficulty: 'medium',
+    prepTime: '',
+    cookTime: '',
+    servings: '',
+    ingredients: '',
+    instructions: '',
+    tags: '',
+    price: '',
+    available_for_order: true,
+    pickup_location: '',
+    full_address: '',
+    phone_number: '',
+    image: null
   });
 
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
-    // Show login modal if not authenticated after loading
-    if (!loading && !isAuthenticated) {
-      setShowLoginModal(true);
-    }
-    // Load circles only if authenticated
-    if (isAuthenticated) {
-      loadCircles();
-    }
-  }, [isAuthenticated, loading]);
+    // No authentication required - page is always accessible
+  }, []);
 
-  // Show loading while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render the form if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50 flex items-center justify-center">
-        <LoginModal isOpen={showLoginModal} onOpenChange={setShowLoginModal} />
-        <div className="text-center max-w-md mx-auto px-6">
-          <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ChefHat className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h1>
-          <p className="text-gray-600 mb-6">
-            You need to be logged in with Google to share a bake.
-          </p>
-          <Button 
-            onClick={() => setShowLoginModal(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white"
-          >
-            Sign in with Google
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const loadCircles = async () => {
-    try {
-      const data = await Circle.list("-created_date", 20);
-      setCircles(data);
-    } catch (error) {
-      console.error("Error loading circles:", error);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, image: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleImageUpload = async (file) => {
-    if (!file) return;
-
-    try {
-      setIsSubmitting(true);
-      const { file_url } = await UploadFile({ file });
-      setBakeData(prev => ({ ...prev, image_url: file_url }));
-      setImagePreview(URL.createObjectURL(file));
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Failed to upload image. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleTagToggle = (tag) => {
-    setBakeData(prev => ({
-      ...prev,
-      tags: prev.tags.includes(tag)
-        ? prev.tags.filter(t => t !== tag)
-        : [...prev.tags, tag]
-    }));
-  };
-
-  const handleAllergenToggle = (allergen) => {
-    setBakeData(prev => ({
-      ...prev,
-      allergens: prev.allergens.includes(allergen)
-        ? prev.allergens.filter(a => a !== allergen)
-        : [...prev.allergens, allergen]
-    }));
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, image: null }));
+    setImagePreview(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!bakeData.title || !bakeData.description || !bakeData.image_url) {
-      alert("Please fill in all required fields and upload an image.");
-      return;
-    }
-
     setIsSubmitting(true);
+
     try {
-      const submitData = {
-        ...bakeData,
-        price: bakeData.price ? parseFloat(bakeData.price) : null
+      // Prepare bake data according to backend schema
+      const bakeData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        price: parseFloat(formData.price) || 0,
+        available_for_order: formData.available_for_order,
+        pickup_location: formData.pickup_location || null,
+        full_address: formData.full_address || null,
+        phone_number: formData.phone_number || null
       };
+
+      // Create the bake using the API
+      const newBake = await Bake.create(bakeData);
+      console.log('Bake created successfully:', newBake);
       
-      await Bake.create(submitData);
+      // Navigate back to home after successful submission
       navigate(createPageUrl("Home"));
     } catch (error) {
-      console.error("Error creating bake:", error);
-      alert("Failed to create bake. Please try again.");
+      console.error('Error submitting form:', error);
+      alert('Failed to create bake. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-            <ChefHat className="w-10 h-10 text-white" />
+        <div className="flex items-center gap-4 mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(createPageUrl("Home"))}
+            className="hover:bg-orange-100"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back to Home
+          </Button>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center">
+              <ChefHat className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Share Your Bake</h1>
+              <p className="text-gray-600">Inspire others with your delicious creation</p>
+            </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Share Your Creation
-          </h1>
-          <p className="text-lg text-gray-600">
-            Show off your homemade bakes to the community
-          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Image Upload */}
-          <Card className="bg-white border border-gray-200 shadow-lg rounded-3xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <ImageIcon className="w-6 h-6" />
-                Upload Photo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="space-y-4">
-                {!imagePreview ? (
-                  <div className="border-2 border-dashed border-orange-300 rounded-2xl p-8 text-center hover:border-orange-400 transition-colors bg-orange-50/50">
-                    <div className="space-y-4">
-                      <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto">
-                        <Camera className="w-10 h-10 text-orange-500" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium text-gray-700">Upload a photo of your bake</p>
-                        <p className="text-sm text-gray-500">Make it look delicious!</p>
-                      </div>
+        {/* Form */}
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-2xl font-bold text-gray-900">Bake Details</CardTitle>
+            <CardDescription className="text-gray-600">
+              Tell us about your amazing bake and share it with the community
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Bake Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., Classic Chocolate Chip Cookies"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="desserts">Desserts</SelectItem>
+                      <SelectItem value="breads">Breads</SelectItem>
+                      <SelectItem value="cakes">Cakes</SelectItem>
+                      <SelectItem value="cookies">Cookies</SelectItem>
+                      <SelectItem value="pastries">Pastries</SelectItem>
+                      <SelectItem value="savory">Savory Bakes</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe your bake, what makes it special..."
+                  rows={3}
+                  required
+                />
+              </div>
+
+              {/* Pricing and Availability */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price ($) *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                    placeholder="15.99"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="difficulty">Difficulty Level</Label>
+                  <Select value={formData.difficulty} onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Available for Order Toggle */}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="available_for_order"
+                  checked={formData.available_for_order}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, available_for_order: checked }))}
+                />
+                <Label htmlFor="available_for_order">Available for Order</Label>
+              </div>
+
+              {/* Time and Servings */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="prepTime">Prep Time (mins)</Label>
+                  <Input
+                    id="prepTime"
+                    type="number"
+                    value={formData.prepTime}
+                    onChange={(e) => setFormData(prev => ({ ...prev, prepTime: e.target.value }))}
+                    placeholder="30"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cookTime">Cook Time (mins)</Label>
+                  <Input
+                    id="cookTime"
+                    type="number"
+                    value={formData.cookTime}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cookTime: e.target.value }))}
+                    placeholder="25"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="servings">Servings</Label>
+                  <Input
+                    id="servings"
+                    type="number"
+                    value={formData.servings}
+                    onChange={(e) => setFormData(prev => ({ ...prev, servings: e.target.value }))}
+                    placeholder="12"
+                  />
+                </div>
+              </div>
+
+              {/* Ingredients and Instructions */}
+              <div className="space-y-2">
+                <Label htmlFor="ingredients">Ingredients *</Label>
+                <Textarea
+                  id="ingredients"
+                  value={formData.ingredients}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ingredients: e.target.value }))}
+                  placeholder="List your ingredients, one per line..."
+                  rows={6}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="instructions">Instructions *</Label>
+                <Textarea
+                  id="instructions"
+                  value={formData.instructions}
+                  onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
+                  placeholder="Step-by-step instructions..."
+                  rows={8}
+                  required
+                />
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <Input
+                  id="tags"
+                  value={formData.tags}
+                  onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                  placeholder="cookies, chocolate, dessert (separate with commas)"
+                />
+              </div>
+
+              {/* Pickup Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="pickup_location">Pickup Location</Label>
+                  <Input
+                    id="pickup_location"
+                    value={formData.pickup_location}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pickup_location: e.target.value }))}
+                    placeholder="e.g., Downtown Bakery"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phone_number">Phone Number</Label>
+                  <Input
+                    id="phone_number"
+                    value={formData.phone_number}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="full_address">Full Address</Label>
+                <Textarea
+                  id="full_address"
+                  value={formData.full_address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, full_address: e.target.value }))}
+                  placeholder="123 Main St, City, State 12345"
+                  rows={2}
+                />
+              </div>
+
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label>Bake Photo</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img src={imagePreview} alt="Preview" className="max-w-full h-64 object-cover rounded-lg mx-auto" />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                      <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleImageUpload(e.target.files[0])}
+                        onChange={handleImageChange}
                         className="hidden"
                         id="image-upload"
                       />
-                      <label htmlFor="image-upload">
-                        <Button type="button" className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg rounded-xl px-6 py-3" asChild>
-                          <span>
-                            <Upload className="w-4 h-4 mr-2" />
-                            Choose Photo
-                          </span>
-                        </Button>
-                      </label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('image-upload').click()}
+                        className="mt-4"
+                      >
+                        Choose File
+                      </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Bake preview"
-                      className="w-full h-64 object-cover rounded-2xl shadow-lg"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="absolute top-3 right-3 bg-white/90 hover:bg-white shadow-lg rounded-full"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setBakeData(prev => ({ ...prev, image_url: "" }));
-                      }}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Basic Info */}
-          <Card className="bg-white border border-gray-200 shadow-lg rounded-3xl overflow-hidden">
-            <CardHeader>
-              <CardTitle className="text-gray-800">Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="title" className="text-gray-700">Bake Title *</Label>
-                <Input
-                  id="title"
-                  value={bakeData.title}
-                  onChange={(e) => setBakeData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g., Chocolate Chip Cookies"
-                  className="mt-2 border-gray-300 focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="description" className="text-gray-700">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={bakeData.description}
-                  onChange={(e) => setBakeData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Tell us about your bake - ingredients, technique, what makes it special..."
-                  rows={4}
-                  className="mt-2 border-gray-300 focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="category" className="text-gray-700">Category</Label>
-                  <Select value={bakeData.category} onValueChange={(value) => setBakeData(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger className="mt-2 border-gray-300 focus:border-orange-500">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="circle" className="text-gray-700">Share to Circle (Optional)</Label>
-                  <Select value={bakeData.circle_id} onValueChange={(value) => setBakeData(prev => ({ ...prev, circle_id: value }))}>
-                    <SelectTrigger className="mt-2 border-gray-300 focus:border-orange-500">
-                      <SelectValue placeholder="Select circle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {circles.map((circle) => (
-                        <SelectItem key={circle.id} value={circle.id}>
-                          {circle.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Contact & Location Info */}
-          <Card className="bg-white border border-gray-200 shadow-lg rounded-3xl overflow-hidden">
-            <CardHeader>
-              <CardTitle className="text-gray-800">Contact & Pickup Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="phone_number" className="text-gray-700">Phone Number</Label>
-                <Input
-                  id="phone_number"
-                  type="tel"
-                  value={bakeData.phone_number}
-                  onChange={(e) => setBakeData(prev => ({ ...prev, phone_number: e.target.value }))}
-                  placeholder="e.g., (555) 123-4567"
-                  className="mt-2 border-gray-300 focus:border-orange-500"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pickup_location" className="text-gray-700">Pickup Location</Label>
-                <Input
-                  id="pickup_location"
-                  value={bakeData.pickup_location}
-                  onChange={(e) => setBakeData(prev => ({ ...prev, pickup_location: e.target.value }))}
-                  placeholder="e.g., Downtown Coffee Shop"
-                  className="mt-2 border-gray-300 focus:border-orange-500"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="full_address" className="text-gray-700">Full Address</Label>
-                <Textarea
-                  id="full_address"
-                  value={bakeData.full_address}
-                  onChange={(e) => setBakeData(prev => ({ ...prev, full_address: e.target.value }))}
-                  placeholder="Complete address for pickup"
-                  rows={2}
-                  className="mt-2 border-gray-300 focus:border-orange-500"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tags and Allergens */}
-          <Card className="bg-white border border-gray-200 shadow-lg rounded-3xl overflow-hidden">
-            <CardHeader>
-              <CardTitle>Tags & Allergens</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label>Dietary Tags</Label>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {COMMON_TAGS.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant={bakeData.tags.includes(tag) ? "default" : "outline"}
-                      className={`cursor-pointer transition-colors ${
-                        bakeData.tags.includes(tag)
-                          ? "bg-orange-500 hover:bg-orange-600 text-white"
-                          : "hover:bg-orange-50 hover:border-orange-300"
-                      }`}
-                      onClick={() => handleTagToggle(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
+                  )}
                 </div>
               </div>
 
-              <div>
-                <Label>Contains Allergens</Label>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {ALLERGENS.map((allergen) => (
-                    <Badge
-                      key={allergen}
-                      variant={bakeData.allergens.includes(allergen) ? "destructive" : "outline"}
-                      className={`cursor-pointer transition-colors ${
-                        !bakeData.allergens.includes(allergen) ? "hover:bg-red-50 hover:border-red-300" : ""
-                      }`}
-                      onClick={() => handleAllergenToggle(allergen)}
-                    >
-                      {allergen}
-                    </Badge>
-                  ))}
-                </div>
+              {/* Submit Buttons */}
+              <div className="flex gap-4 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(createPageUrl("Home"))}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                >
+                  {isSubmitting ? 'Sharing...' : 'Share Bake'}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Ordering Options */}
-          <Card className="bg-white border border-gray-200 shadow-lg rounded-3xl overflow-hidden">
-            <CardHeader>
-              <CardTitle>Ordering & Pickup</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="available_for_order">Available for Pre-Order</Label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Allow others to request this bake from you
-                  </p>
-                </div>
-                <Switch
-                  id="available_for_order"
-                  checked={bakeData.available_for_order}
-                  onCheckedChange={(checked) => setBakeData(prev => ({ ...prev, available_for_order: checked }))}
-                />
-              </div>
-
-              {bakeData.available_for_order && (
-                <div className="grid grid-cols-1 pt-4 border-t border-gray-200">
-                  <div>
-                    <Label htmlFor="price">Price ($)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bakeData.price}
-                      onChange={(e) => setBakeData(prev => ({ ...prev, price: e.target.value }))}
-                      placeholder="0.00"
-                      className="mt-2 border-gray-300 focus:border-orange-500"
-                    />
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Submit Button */}
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(createPageUrl("Home"))}
-              disabled={isSubmitting}
-              className="rounded-xl px-6 py-3 border-gray-300 text-gray-700"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3 rounded-xl shadow-lg font-semibold"
-            >
-              {isSubmitting ? "Sharing..." : "Share Bake"}
-            </Button>
-          </div>
-        </form>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

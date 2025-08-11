@@ -14,15 +14,26 @@ class BakeBase(BaseModel):
     tags: Optional[List[str]] = []
     allergens: Optional[List[str]] = []
     price: float = Field(..., gt=0)
+    available_for_order: Optional[bool] = True
     pickup_location: Optional[str] = Field(None, max_length=255)
     full_address: Optional[str] = None
     phone_number: Optional[str] = Field(None, max_length=20)
     circle_id: Optional[int] = None
 
 
-class BakeCreate(BakeBase):
+class BakeCreate(BaseModel):
     """Schema for creating a bake"""
-    pass
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(..., min_length=1)
+    category: str = Field(..., min_length=1, max_length=100)
+    tags: Optional[List[str]] = []
+    allergens: Optional[List[str]] = []
+    price: float = Field(..., gt=0)
+    available_for_order: Optional[bool] = True
+    pickup_location: Optional[str] = Field(None, max_length=255)
+    full_address: Optional[str] = None
+    phone_number: Optional[str] = Field(None, max_length=20)
+    circle_id: Optional[int] = None
 
 
 class BakeUpdate(BaseModel):
@@ -41,16 +52,33 @@ class BakeUpdate(BaseModel):
     circle_id: Optional[int] = None
 
 
-class BakeInDB(BakeBase):
+class BakeInDB(BaseModel):
     """Schema for bake in database"""
     id: int
+    title: str
+    description: str
     image_url: Optional[str] = None
-    available_for_order: bool = True
+    category: str
+    tags: List[str]
+    allergens: List[str]
+    price_cents: int
+    available_for_order: bool
+    pickup_location: Optional[str] = None
+    full_address: Optional[str] = None
+    phone_number: Optional[str] = None
+    circle_id: Optional[int] = None
     rating: float = 0.0
     review_count: int = 0
+    like_count: int = 0
+    comment_count: int = 0
     created_by: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+    @property
+    def price(self) -> float:
+        """Convert price_cents to dollars"""
+        return self.price_cents / 100.0
 
     class Config:
         from_attributes = True
@@ -67,12 +95,19 @@ class BakeList(BaseModel):
     title: str
     image_url: Optional[str] = None
     category: str
-    price: float
+    price_cents: int
     rating: float
     review_count: int
+    like_count: int
+    comment_count: int
     available_for_order: bool
     created_by: int
     created_at: datetime
+
+    @property
+    def price(self) -> float:
+        """Convert price_cents to dollars"""
+        return self.price_cents / 100.0
 
     class Config:
         from_attributes = True

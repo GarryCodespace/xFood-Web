@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
-from app.core.deps import get_current_user, get_current_baker
+# from app.core.deps import get_current_user, get_current_baker  # Commented out - no auth required
 from app.db.database import get_db
 from app.models.user import User
 from app.models.recipe import Recipe
@@ -18,12 +18,12 @@ router = APIRouter()
 async def create_recipe(
     recipe_data: RecipeCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)  # Commented out for now - anyone can post
 ):
     """Create a new recipe"""
     db_recipe = Recipe(
         **recipe_data.dict(),
-        created_by=current_user.id
+        created_by=1  # Default user ID for anonymous posts
     )
     
     db.add(db_recipe)
@@ -44,7 +44,7 @@ async def get_recipes(
     max_prep_time: Optional[int] = None,
     max_cook_time: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    # current_user: Optional[User] = Depends(get_optional_user)  # Commented out - no auth required
 ):
     """Get recipes with filtering and search"""
     query = db.query(Recipe)
@@ -95,7 +95,7 @@ async def get_recipes(
 async def get_recipe(
     recipe_id: int,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    # current_user: Optional[User] = Depends(get_optional_user)  # Commented out - no auth required
 ):
     """Get recipe by ID"""
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
@@ -113,7 +113,7 @@ async def update_recipe(
     recipe_id: int,
     recipe_update: RecipeUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)  # Commented out for now
 ):
     """Update recipe"""
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
@@ -123,12 +123,12 @@ async def update_recipe(
             detail="Recipe not found"
         )
     
-    # Only creator or admin can update recipe
-    if recipe.created_by != current_user.id and current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+    # Commented out permission check for now
+    # if recipe.created_by != current_user.id and current_user.role != "admin":
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Not enough permissions"
+    #     )
     
     # Update recipe fields
     update_data = recipe_update.dict(exclude_unset=True)
@@ -144,7 +144,7 @@ async def update_recipe(
 async def delete_recipe(
     recipe_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)  # Commented out for now
 ):
     """Delete recipe"""
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
@@ -154,12 +154,12 @@ async def delete_recipe(
             detail="Recipe not found"
         )
     
-    # Only creator or admin can delete recipe
-    if recipe.created_by != current_user.id and current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+    # Commented out permission check for now
+    # if recipe.created_by != current_user.id and current_user.role != "admin":
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Not enough permissions"
+    #         )
     
     db.delete(recipe)
     db.commit()
@@ -172,7 +172,7 @@ async def get_user_recipes(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    # current_user: Optional[User] = Depends(get_optional_user)  # Commented out - no auth required
 ):
     """Get recipes by user ID"""
     recipes = db.query(Recipe).filter(

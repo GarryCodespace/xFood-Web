@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 class CommentBase(BaseModel):
     """Base comment schema"""
     content: str = Field(..., min_length=1, max_length=1000)
+    rating: Optional[float] = Field(5.0, ge=1, le=5)
     recipe_id: Optional[int] = None
     bake_id: Optional[int] = None
     parent_comment_id: Optional[int] = None
@@ -28,8 +29,12 @@ class CommentInDB(CommentBase):
     """Schema for comment in database"""
     id: int
     user_id: int
+    rating: Optional[float] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    # Computed field for frontend compatibility
+    author_name: Optional[str] = None
+    created_date: Optional[datetime] = None
 
     class Config:
         from_attributes = True

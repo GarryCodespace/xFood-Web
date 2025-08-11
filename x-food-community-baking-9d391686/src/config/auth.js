@@ -1,9 +1,8 @@
 // Authentication configuration
 export const AUTH_CONFIG = {
-  // Google OAuth Configuration
+  // Google Identity Services Configuration
   GOOGLE: {
     CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
-    SCOPE: 'openid email profile',
   },
   
   // API Configuration

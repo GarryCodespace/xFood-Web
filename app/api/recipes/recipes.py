@@ -8,23 +8,23 @@ from app.core.deps import get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.models.recipe import Recipe
-from app.schemas.recipe import RecipeCreate, RecipeUpdate, Recipe, RecipeList
+from app.schemas.recipe import RecipeCreate, RecipeUpdate, Recipe as RecipeSchema, RecipeList
 from app.core.security import verify_user_permission
 
 router = APIRouter()
 
 
-@router.post("/", response_model=Recipe, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=RecipeSchema, status_code=status.HTTP_201_CREATED)
 async def create_recipe(
     recipe_data: RecipeCreate,
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),  # Commented out for now - anyone can post
     db: Session = Depends(get_db)
 ):
     """Create a new recipe"""
-    # Create new recipe
+    # Create new recipe with default creator ID
     db_recipe = Recipe(
         **recipe_data.dict(),
-        creator_id=current_user.id
+        created_by=1  # Default user ID for anonymous posts
     )
     
     db.add(db_recipe)
@@ -58,10 +58,10 @@ async def list_recipes(
         query = query.filter(Recipe.difficulty == difficulty)
     
     if cooking_time:
-        query = query.filter(Recipe.cooking_time <= cooking_time)
+        query = query.filter(Recipe.cook_time <= cooking_time)
     
     if creator_id:
-        query = query.filter(Recipe.creator_id == creator_id)
+        query = query.filter(Recipe.created_by == creator_id)
     
     # Order by creation date (newest first)
     query = query.order_by(Recipe.created_at.desc())
@@ -70,17 +70,17 @@ async def list_recipes(
     return recipes
 
 
-@router.get("/my-recipes", response_model=List[Recipe])
+@router.get("/my-recipes", response_model=List[RecipeSchema])
 async def get_my_recipes(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get recipes created by the current user"""
-    recipes = db.query(Recipe).filter(Recipe.creator_id == current_user.id).order_by(Recipe.created_at.desc()).all()
+    recipes = db.query(Recipe).filter(Recipe.created_by == current_user.id).order_by(Recipe.created_at.desc()).all()
     return recipes
 
 
-@router.get("/{recipe_id}", response_model=Recipe)
+@router.get("/{recipe_id}", response_model=RecipeSchema)
 async def get_recipe(
     recipe_id: int,
     db: Session = Depends(get_db)
@@ -97,7 +97,7 @@ async def get_recipe(
     return recipe
 
 
-@router.put("/{recipe_id}", response_model=Recipe)
+@router.put("/{recipe_id}", response_model=RecipeSchema)
 async def update_recipe(
     recipe_id: int,
     recipe_data: RecipeUpdate,
@@ -156,7 +156,7 @@ async def delete_recipe(
     return None
 
 
-@router.post("/{recipe_id}/favorite", response_model=Recipe)
+@router.post("/{recipe_id}/favorite", response_model=RecipeSchema)
 async def favorite_recipe(
     recipe_id: int,
     current_user: User = Depends(get_current_user),
@@ -171,7 +171,7 @@ async def favorite_recipe(
             detail="Recipe not found"
         )
     
-    if recipe.creator_id == current_user.id:
+    if recipe.created_by == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot favorite your own recipe"
@@ -189,7 +189,7 @@ async def favorite_recipe(
     return recipe
 
 
-@router.post("/{recipe_id}/unfavorite", response_model=Recipe)
+@router.post("/{recipe_id}/unfavorite", response_model=RecipeSchema)
 async def unfavorite_recipe(
     recipe_id: int,
     current_user: User = Depends(get_current_user),
@@ -238,7 +238,7 @@ async def get_quick_recipes(
 ):
     """Get quick recipes under specified time"""
     recipes = db.query(Recipe).filter(
-        Recipe.cooking_time <= max_time
-    ).order_by(Recipe.cooking_time.asc()).limit(limit).all()
+        Recipe.cook_time <= max_time
+    ).order_by(Recipe.cook_time.asc()).limit(limit).all()
     
     return recipes

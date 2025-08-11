@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Users, ChefHat, BookOpen, User, Plus, Bell, MessageSquare, CreditCard } from "lucide-react";
+import { Home, Users, ChefHat, BookOpen, User, Plus, Bell, MessageSquare } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button";
 import NotificationBell from '../components/shared/NotificationBell';
@@ -24,11 +24,6 @@ const navigationItems = [
     url: createPageUrl("Circles"),
     icon: Users,
   },
-  {
-    title: "Payments",
-    url: createPageUrl("PaymentDemo"),
-    icon: CreditCard,
-  },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -39,14 +34,15 @@ export default function Layout({ children, currentPageName }) {
   const logoUrl = "/logo.svg"; // Using our local SVG logo
 
   const handleShareBakeClick = async () => {
-    if (isAuthenticated) {
-      navigate(createPageUrl("AddBake"));
-    } else {
+    if (!isAuthenticated) {
       setShowLoginModal(true);
+      return;
     }
+    navigate(createPageUrl("AddBake"));
   };
 
   let allNavigationItems = [...navigationItems];
+  // Only show Profile if user is authenticated
   if (isAuthenticated) {
     allNavigationItems.push({
       title: "Profile",
@@ -113,14 +109,32 @@ export default function Layout({ children, currentPageName }) {
               ))}
               
               <div className="flex items-center gap-2 ml-4">
-                {user && <NotificationBell />}
-                <Button 
-                  onClick={handleShareBakeClick}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Share Bake
-                </Button>
+                {isAuthenticated && user && <NotificationBell />}
+                {isAuthenticated ? (
+                  <>
+                    <Button 
+                      onClick={handleShareBakeClick}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Share Bake
+                    </Button>
+                    <Button 
+                      onClick={logout}
+                      variant="outline"
+                      className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => setShowLoginModal(true)}
+                    className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg"
+                  >
+                    Sign In
+                  </Button>
+                )}
               </div>
             </nav>
           </div>
