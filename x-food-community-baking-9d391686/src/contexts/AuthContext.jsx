@@ -50,17 +50,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (googleToken) => {
+  const login = async (token, provider = 'google') => {
     try {
       setLoading(true);
       
       let endpoint = `${AUTH_CONFIG.API.BASE_URL}/api/v1/auth/google`;
-      let body = JSON.stringify({ id_token: googleToken });
+      let body = JSON.stringify({ id_token: token });
       
       // Handle demo login
-      if (googleToken === 'demo_token') {
+      if (token === 'demo_token') {
         endpoint = `${AUTH_CONFIG.API.BASE_URL}/api/v1/auth/demo`;
         body = '{}';
+      }
+      // Handle Apple login
+      else if (provider === 'apple') {
+        endpoint = `${AUTH_CONFIG.API.BASE_URL}/api/v1/auth/apple`;
+        body = JSON.stringify({ id_token: token });
       }
       
       const response = await fetch(endpoint, {
